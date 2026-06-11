@@ -20,6 +20,7 @@
     --green: #5aab6e;
     --blue: #4a7fc1;
     --purple: #8b5cf6;
+    --pink: #e879a0;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -72,6 +73,40 @@
     width: 100%;
     max-width: 540px;
   }
+
+  /* Mode toggle */
+  .mode-toggle {
+    display: flex;
+    gap: 0;
+    margin-bottom: 24px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .mode-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    border-right: 1px solid var(--border);
+  }
+
+  .mode-btn:last-child { border-right: none; }
+
+  .mode-btn.active {
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+
+  .mode-btn:hover:not(.active) { color: var(--text); }
 
   /* Barcode input zone */
   .scan-zone {
@@ -155,6 +190,89 @@
   }
 
   @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  /* Manual entry panel */
+  .manual-panel {
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .manual-panel.visible { display: block; }
+
+  .manual-row {
+    margin-bottom: 16px;
+  }
+
+  .manual-field-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .manual-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .manual-input:focus { border-color: var(--accent); }
+  .manual-input::placeholder { color: var(--muted); }
+
+  .manual-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .btn-manual-lookup {
+    flex: 1;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    border-radius: 3px;
+    padding: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .btn-manual-lookup:hover { background: rgba(200,169,110,0.22); }
+
+  .btn-manual-record {
+    flex: 1;
+    background: var(--accent);
+    border: none;
+    color: var(--bg);
+    border-radius: 3px;
+    padding: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-weight: 500;
+    transition: opacity 0.15s;
+  }
+
+  .btn-manual-record:hover { opacity: 0.88; }
 
   /* Book card */
   .book-card {
@@ -473,6 +591,13 @@
 
 <div class="scanner-ring">
 
+  <!-- Mode toggle -->
+  <div class="mode-toggle">
+    <button class="mode-btn active" id="mode-scan" onclick="setMode('scan')">Scan Barcode</button>
+    <button class="mode-btn" id="mode-isbn" onclick="setMode('isbn')">Manual ISBN</button>
+    <button class="mode-btn" id="mode-manual" onclick="setMode('manual')">Manual Record</button>
+  </div>
+
   <!-- Scan zone -->
   <div class="scan-zone" id="scan-zone">
     <div class="scan-label">
@@ -483,6 +608,40 @@
       <span class="waiting-text">scan now_</span>
     </div>
     <input type="text" id="barcode-input" autocomplete="off" />
+  </div>
+
+  <!-- Manual ISBN panel -->
+  <div class="manual-panel" id="manual-isbn-panel">
+    <div class="manual-row">
+      <div class="manual-field-label">ISBN</div>
+      <input type="text" class="manual-input" id="manual-isbn-input" placeholder="Enter ISBN…" autocomplete="off" />
+    </div>
+    <div class="manual-actions">
+      <button class="btn-manual-lookup" onclick="doManualISBNLookup()">Look Up</button>
+    </div>
+  </div>
+
+  <!-- Manual Record panel -->
+  <div class="manual-panel" id="manual-record-panel">
+    <div class="manual-row">
+      <div class="manual-field-label">Title</div>
+      <input type="text" class="manual-input" id="mr-title" placeholder="Book title…" autocomplete="off" />
+    </div>
+    <div class="manual-row">
+      <div class="manual-field-label">Author</div>
+      <input type="text" class="manual-input" id="mr-author" placeholder="Author name…" autocomplete="off" />
+    </div>
+    <div class="manual-row">
+      <div class="manual-field-label">ISBN</div>
+      <input type="text" class="manual-input" id="mr-isbn" placeholder="ISBN (optional)…" autocomplete="off" />
+    </div>
+    <div class="manual-row">
+      <div class="manual-field-label">Color</div>
+      <input type="text" class="manual-input" id="mr-color" placeholder="Color name (optional)…" autocomplete="off" />
+    </div>
+    <div class="manual-actions">
+      <button class="btn-manual-record" onclick="doManualRecord()">Save Record</button>
+    </div>
   </div>
 
   <!-- Book card -->
@@ -525,6 +684,7 @@
   let selectedColor = null;
   let barcodeBuffer = '';
   let barcodeTimer = null;
+  let currentMode = 'scan';
 
   const COLORS = JSON.parse(localStorage.getItem('bookscanner_colors') || 'null') || [
     { name: 'Red',    hex: '#e05252' },
@@ -533,27 +693,98 @@
     { name: 'Green',  hex: '#5aab6e' },
     { name: 'Blue',   hex: '#4a7fc1' },
     { name: 'Purple', hex: '#8b5cf6' },
+    { name: 'Pink',   hex: '#e879a0' },
   ];
 
   function saveColors() {
     localStorage.setItem('bookscanner_colors', JSON.stringify(COLORS));
   }
 
+  // ── Mode toggle ──────────────────────────────────────────────
+  function setMode(mode) {
+    currentMode = mode;
+
+    document.getElementById('mode-scan').classList.toggle('active', mode === 'scan');
+    document.getElementById('mode-isbn').classList.toggle('active', mode === 'isbn');
+    document.getElementById('mode-manual').classList.toggle('active', mode === 'manual');
+
+    document.getElementById('scan-zone').style.display = mode === 'scan' ? 'block' : 'none';
+    document.getElementById('manual-isbn-panel').classList.toggle('visible', mode === 'isbn');
+    document.getElementById('manual-record-panel').classList.toggle('visible', mode === 'manual');
+
+    // Reset book card when switching modes
+    resetScanner(mode === 'scan');
+
+    if (mode === 'isbn') {
+      document.getElementById('manual-isbn-input').focus();
+    } else if (mode === 'manual') {
+      document.getElementById('mr-title').focus();
+    }
+  }
+
+  // ── Manual ISBN lookup ───────────────────────────────────────
+  function doManualISBNLookup() {
+    const val = document.getElementById('manual-isbn-input').value.trim();
+    if (!val) { showToast('Enter an ISBN first', 'error'); return; }
+    handleBarcode(val);
+  }
+
+  document.getElementById('manual-isbn-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') doManualISBNLookup();
+  });
+
+  // ── Manual Record ────────────────────────────────────────────
+  function doManualRecord() {
+    const title  = document.getElementById('mr-title').value.trim();
+    const author = document.getElementById('mr-author').value.trim();
+    const isbn   = document.getElementById('mr-isbn').value.trim().replace(/\D/g, '');
+    const color  = document.getElementById('mr-color').value.trim();
+
+    if (!title && !author && !isbn) {
+      showToast('Fill in at least one field', 'error');
+      return;
+    }
+
+    const url = 'https://script.google.com/macros/s/AKfycbwk1SV2wLEOOx_IY2uAF2PQHgSu6Dq1V8kPFn54XlpmQBd8dJrVs1zRryrstePKaWh3WA/exec';
+    const params = new URLSearchParams({
+      isbn:   isbn   || '',
+      title:  title  || '',
+      author: author || '',
+      color:  color  || '',
+    });
+
+    const img = new Image();
+    img.src = url + '?' + params.toString();
+    img.onload = img.onerror = () => {};
+
+    showToast('Saved to sheet ✓', 'success');
+
+    // Clear fields
+    document.getElementById('mr-title').value = '';
+    document.getElementById('mr-author').value = '';
+    document.getElementById('mr-isbn').value = '';
+    document.getElementById('mr-color').value = '';
+    document.getElementById('mr-title').focus();
+  }
+
   // ── Barcode capture ──────────────────────────────────────────
-  // Always focused invisible input catches scanner keypresses
   const barcodeInput = document.getElementById('barcode-input');
 
   function focusScanner() {
-    barcodeInput.focus();
+    if (currentMode === 'scan') barcodeInput.focus();
   }
 
-  document.addEventListener('click', focusScanner);
+  document.addEventListener('click', (e) => {
+    const tag = e.target.tagName;
+    if (tag === 'INPUT' || tag === 'BUTTON') return;
+    focusScanner();
+  });
+
   document.addEventListener('keydown', (e) => {
-    // If user types in our own inputs, don't steal focus
     const tag = document.activeElement.tagName;
     if (tag === 'INPUT' && document.activeElement !== barcodeInput) return;
     if (tag === 'BUTTON') return;
-    barcodeInput.focus();
+    if (currentMode === 'scan') barcodeInput.focus();
   });
 
   barcodeInput.addEventListener('input', (e) => {
@@ -567,7 +798,7 @@
         handleBarcode(barcodeBuffer.trim());
       }
       barcodeBuffer = '';
-    }, 100); // USB scanners send Enter; handle after brief pause
+    }, 100);
   });
 
   barcodeInput.addEventListener('keydown', (e) => {
@@ -580,12 +811,6 @@
     }
   });
 
-  // Also catch keyboard globally for scanners that don't focus the input
-  document.addEventListener('keypress', (e) => {
-    const tag = document.activeElement.tagName;
-    if (tag === 'INPUT' && document.activeElement !== barcodeInput) return;
-  });
-
   function renderBarcodeDisplay(text) {
     const el = document.getElementById('barcode-display');
     el.innerHTML = text.split('').map((c, i) =>
@@ -595,7 +820,6 @@
 
   // ── Book lookup ──────────────────────────────────────────────
   async function handleBarcode(isbn) {
-    // Sanitize: only digits
     isbn = isbn.replace(/\D/g, '');
     if (!isbn) return;
 
@@ -611,7 +835,6 @@
     document.getElementById('loading-bar').style.display = 'block';
     document.getElementById('error-note').style.display = 'none';
 
-    // Animate loading bar
     let pct = 0;
     const fill = document.getElementById('loading-fill');
     const loadInt = setInterval(() => {
@@ -632,7 +855,6 @@
         const book = data[key];
         const title = book.title || 'Unknown Title';
 
-        // by_statement is the cleanest source ("Amy Tan") — fall back to first author only
         let author = 'Unknown Author';
         if (book.by_statement) {
           author = book.by_statement.replace(/^by\s+/i, '').replace(/\.$/, '').trim();
@@ -707,10 +929,9 @@
       color:  selectedColor,
     });
 
-    // Image ping bypasses CORS entirely — Apps Script receives the GET no matter what
     const img = new Image();
     img.src = url + '?' + params.toString();
-    img.onload = img.onerror = () => {}; // silence errors; request still fires
+    img.onload = img.onerror = () => {};
 
     showToast('Saved to sheet ✓', 'success');
     setTimeout(() => {
@@ -734,7 +955,7 @@
     document.getElementById('error-note').style.display = 'none';
     document.getElementById('loading-bar').style.display = 'none';
 
-    if (focusInput) focusScanner();
+    if (focusInput && currentMode === 'scan') focusScanner();
   }
 
   // ── Toast ────────────────────────────────────────────────────
@@ -750,6 +971,8 @@
   // ── Init ─────────────────────────────────────────────────────
   renderColors();
   focusScanner();
+  // Ensure scan zone visible on load
+  document.getElementById('scan-zone').style.display = 'block';
 </script>
 </body>
 </html>
